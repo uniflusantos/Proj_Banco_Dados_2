@@ -1,0 +1,115 @@
+-- Criação das tabelas sem foreign keys
+
+-- Tabela Aluno
+CREATE TABLE public."Aluno" (
+    "RA" text NOT NULL,
+    "Nome" text NOT NULL,
+    CONSTRAINT "Aluno_pkey" PRIMARY KEY ("RA")
+);
+
+-- Tabela Professor
+CREATE TABLE public."Professor" (
+    "Prof_ID" text NOT NULL,
+    "Nome" text NOT NULL,
+    "Departamento" text NULL,
+    CONSTRAINT "Professor_pkey" PRIMARY KEY ("Prof_ID")
+);
+
+-- Tabela Departamento
+CREATE TABLE public."Departamento" (
+    "Dept_ID" text NOT NULL,
+    "Nome" text NOT NULL,
+    "Chefe" text NULL,
+    CONSTRAINT "Departamento_pkey" PRIMARY KEY ("Dept_ID")
+);
+
+-- Tabela Disciplina
+CREATE TABLE public."Disciplina" (
+    "Disc_ID" text NOT NULL,
+    "Instrumento" text NOT NULL,
+    "Nivel" text NULL,
+    CONSTRAINT "Disciplina_pkey" PRIMARY KEY ("Disc_ID")
+);
+
+-- Tabela Curso
+CREATE TABLE public."Curso" (
+    "Curso_ID" text NOT NULL,
+    "Instrumento" text NOT NULL,
+    "Coordenador" text NULL,
+    "Departamento" text NULL,
+    CONSTRAINT "Curso_pkey" PRIMARY KEY ("Curso_ID")
+);
+
+-- Tabela Historico_Aluno
+CREATE TABLE public."Historico_Aluno" (
+    "Index" text NOT NULL,
+    "RA" text NOT NULL,
+    "Disc_ID" text NULL,
+    "Ano" text NULL,
+    CONSTRAINT "Historico_Aluno_pkey" PRIMARY KEY ("Index")
+);
+
+-- Tabela Historico_Professor
+CREATE TABLE public."Historico_Professor" (
+    "Index" text NOT NULL,
+    "Prof_ID" text NOT NULL,
+    "Disc_ID" text NULL,
+    "Ano" text NULL,
+    CONSTRAINT "Historico_Professor_pkey" PRIMARY KEY ("Index")
+);
+
+-- Tabela Matriz_Curricular
+CREATE TABLE public."Matriz_Curricular" (
+    "Index" text NOT NULL,
+    "Curso" text NOT NULL,
+    "Disciplina" text NOT NULL,
+    CONSTRAINT "Matriz_Curricular_pkey" PRIMARY KEY ("Index")
+);
+
+-- Adição das foreign keys após todas as tabelas estarem criadas
+
+-- Foreign keys para a tabela Professor
+ALTER TABLE public."Professor" 
+ADD CONSTRAINT "Professor_Departamento_fkey" 
+FOREIGN KEY ("Departamento") REFERENCES public."Departamento"("Dept_ID");
+
+-- Foreign keys para a tabela Departamento
+ALTER TABLE public."Departamento" 
+ADD CONSTRAINT "Departamento_Chefe_fkey" 
+FOREIGN KEY ("Chefe") REFERENCES public."Professor"("Prof_ID");
+
+-- Foreign keys para a tabela Curso
+ALTER TABLE public."Curso" 
+ADD CONSTRAINT "Curso_Coordenador_fkey" 
+FOREIGN KEY ("Coordenador") REFERENCES public."Professor"("Prof_ID");
+
+ALTER TABLE public."Curso" 
+ADD CONSTRAINT "Curso_Depatamento_fkey" 
+FOREIGN KEY ("Departamento") REFERENCES public."Departamento"("Dept_ID");
+
+-- Foreign keys para a tabela Historico_Aluno
+ALTER TABLE public."Historico_Aluno" 
+ADD CONSTRAINT "Historico_Aluno_Disc_ID_fkey" 
+FOREIGN KEY ("Disc_ID") REFERENCES public."Disciplina"("Disc_ID");
+
+ALTER TABLE public."Historico_Aluno" 
+ADD CONSTRAINT "Historico_Aluno_RA_fkey" 
+FOREIGN KEY ("RA") REFERENCES public."Aluno"("RA");
+
+-- Foreign keys para a tabela Historico_Professor
+ALTER TABLE public."Historico_Professor" 
+ADD CONSTRAINT "Historico_Professor_Disc_ID_fkey" 
+FOREIGN KEY ("Disc_ID") REFERENCES public."Disciplina"("Disc_ID");
+
+ALTER TABLE public."Historico_Professor" 
+ADD CONSTRAINT "Historico_Professor_Prof_ID_fkey" 
+FOREIGN KEY ("Prof_ID") REFERENCES public."Professor"("Prof_ID");
+
+-- Foreign keys para a tabela Matriz_Curricular
+ALTER TABLE public."Matriz_Curricular" 
+ADD CONSTRAINT "Matriz_Curricular_Curso_fkey" 
+FOREIGN KEY ("Curso") REFERENCES public."Curso"("Curso_ID");
+
+ALTER TABLE public."Matriz_Curricular" 
+ADD CONSTRAINT "Matriz_Curricular_Disciplina_fkey" 
+FOREIGN KEY ("Disciplina") REFERENCES public."Disciplina"("Disc_ID");
