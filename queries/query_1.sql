@@ -1,3 +1,4 @@
+--Query: Retorna as disciplinas feitas por um aluno junto ao professor que lecionou a disciplina ao aluno
 SELECT
 	d."Disc_ID" AS Codigo_Disciplina,
 	d."Instrumento" AS Nome_Disciplina,
