@@ -1,3 +1,4 @@
+--Recupere os nomes e IDs dos estudantes que tiveram aula com o professor que tem o ID "PC0671".
 SELECT
 	a."RA" AS ID_Estudante,
 	a."Nome" AS Nome_Estudante
