@@ -1,3 +1,4 @@
+--O dono de um bar entrou em contato com a escola de música, pois queria um artista para se apresentar no bar. Ele quer uma lista de todos os alunos que cursaram as disciplinas de violão ou guitarra, e canto. Mostre o nome do aluno e o nome e nível da disciplina.
 SELECT
 	a."Nome" AS Nome_Aluno,
 	d."Instrumento" AS Nome_Disciplina,
