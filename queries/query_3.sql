@@ -1,5 +1,6 @@
---Query: Encontre os nomes de todos os estudantes que cursaram violão.
+--Encontre os nomes de todos os estudantes que cursaram violão.
 SELECT
+	a."RA",
 	a."Nome"
 FROM
 	"Aluno" a
