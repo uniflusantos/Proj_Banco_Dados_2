@@ -1,10 +1,12 @@
---Encontre os nomes de todos os estudantes que cursaram violão.
+--Liste os IDs dos professores que ensinam mais de uma disciplina.
 SELECT
-	a."RA",
-	a."Nome"
+	hp."Prof_ID",
+	COUNT(DISTINCT hp."Disc_ID") as num_disciplinas
 FROM
-	"Aluno" a
-	JOIN "Historico_Aluno" ha ON a."RA" = ha."RA"
-	JOIN "Disciplina" d ON ha."Disc_ID" = d."Disc_ID"
-WHERE
-	d."Instrumento" = 'Violao';
+	"Historico_Professor" hp
+GROUP BY
+	hp."Prof_ID"
+HAVING
+	COUNT(DISTINCT hp."Disc_ID") >= 2
+ORDER BY
+	hp."Prof_ID";
