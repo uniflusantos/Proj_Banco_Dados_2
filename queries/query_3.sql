@@ -1,4 +1,4 @@
---Encontre os nomes de todos os estudantes que cursaram violão.SELECT
+--Encontre os nomes de todos os estudantes que cursaram violão.
 SELECT
 	a."RA",
 	a."Nome"
