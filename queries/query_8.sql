@@ -1,4 +1,4 @@
---Para os alunos de ID "A007522", "A102603" e "A994253", mostre as disciplinas que eles cursam, junto do nome dos professores que lecionam essas disciplinas.
+--Para os alunos de ID "A002424", "A033131" e "A281401", mostre as disciplinas que eles cursam, junto do nome dos professores que lecionam essas disciplinas.
 SELECT
 	a."RA" AS ID_Aluno,
 	a."Nome" AS Nome_Aluno,
@@ -13,4 +13,4 @@ FROM
 	AND ha."Ano" = hp."Ano"
 	LEFT JOIN "Professor" p ON hp."Prof_ID" = p."Prof_ID"
 WHERE
-	a."RA" IN ('A007522', 'A102603', 'A994253');
+	a."RA" IN ('A002424', 'A033131', 'A281401');
