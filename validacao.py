@@ -2,29 +2,23 @@ import psycopg2
 from psycopg2 import Error
 from datetime import datetime
 
-# --- DETALHES DA CONEXÃO ---
-DB_NAME = "postgres"
-DB_USER = "postgres.tcfynslqblbnodeewhdq"
-DB_PASSWORD = "Foguete50" 
-DB_HOST = "aws-0-sa-east-1.pooler.supabase.com"
-DB_PORT = "5432"
 
 LOG_FILE = 'validacao_banco_escola_musica.log'
 
 def conectar_banco():
     try:
         connection = psycopg2.connect(
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD,
-            host=DB_HOST,
-            port=DB_PORT
+            database="postgres",
+            user="postgres.tcfynslqblbnodeewhdq",
+            password="Foguete50",
+            host="aws-0-sa-east-1.pooler.supabase.com",
+            port="5432"
         )
         return connection
     except (Exception, Error) as error:
         log_message = f"Erro ao conectar ao PostgreSQL: {error}"
         escrever_log(log_message)
-        print(log_message) # Adicionado para feedback imediato no console
+        print(log_message) 
         return None
 
 def escrever_log(mensagem):
@@ -33,9 +27,8 @@ def escrever_log(mensagem):
         arquivo_log.write(f"[{timestamp}] {mensagem}\n")
 
 def validar_regras():
-    # Criar cabeçalho do log
-    with open(LOG_FILE, 'w', encoding='utf-8') as f: # 'w' para sobrescrever o log a cada execução
-        pass # Apenas para limpar/criar o arquivo
+    with open(LOG_FILE, 'w', encoding='utf-8') as f: 
+        pass 
     escrever_log("\n" + "="*50)
     escrever_log("INÍCIO DA VALIDAÇÃO DO BANCO DE DADOS - ESCOLA DE MÚSICA")
     escrever_log("="*50 + "\n")
@@ -60,7 +53,7 @@ def validar_regras():
     total_violacoes = 0
     
     try:
-        # Contagem total de registros
+        
         cursor.execute('SELECT COUNT(*) FROM "Aluno"')
         total_registros['aluno'] = cursor.fetchone()[0]
         cursor.execute('SELECT COUNT(*) FROM "Professor"')
@@ -89,7 +82,7 @@ def validar_regras():
         escrever_log(f"Total de Registros em Historico_Professor: {total_registros['historico_professor']}")
         escrever_log(f"Total de Registros em Matriz_Curricular: {total_registros['matriz_curricular']}\n")
         
-        # 1. Todo Professor deve ter um Departamento
+        
         escrever_log("\nVALIDAÇÃO 1: Professores sem departamento")
         cursor.execute('''
             SELECT "Prof_ID", "Nome" 
@@ -105,7 +98,7 @@ def validar_regras():
         else:
             escrever_log("✓ Todos os professores possuem departamento atribuído.")
 
-        # 2. Todo Departamento deve ter um Chefe (Professor)
+       
         escrever_log("\nVALIDAÇÃO 2: Departamentos sem chefe")
         cursor.execute('''
             SELECT "Dept_ID", "Nome" 
@@ -121,7 +114,7 @@ def validar_regras():
         else:
             escrever_log("✓ Todos os departamentos possuem chefe atribuído.")
 
-        # 3. Todo Curso deve ter um Coordenador (Professor)
+        
         escrever_log("\nVALIDAÇÃO 3: Cursos sem coordenador")
         cursor.execute('''
             SELECT "Curso_ID", "Instrumento" 
@@ -137,7 +130,7 @@ def validar_regras():
         else:
             escrever_log("✓ Todos os cursos possuem coordenador atribuído.")
 
-        # 4. Todo Curso deve ter um Departamento
+       
         escrever_log("\nVALIDAÇÃO 4: Cursos sem departamento")
         cursor.execute('''
             SELECT "Curso_ID", "Instrumento" 
@@ -153,7 +146,7 @@ def validar_regras():
         else:
             escrever_log("✓ Todos os cursos possuem departamento atribuído.")
 
-        # 5. Todos os Alunos devem estar na tabela Historico_Aluno
+        
         #    (Esta regra também implica que "Todo Aluno deve ter pelo menos uma disciplina")
         escrever_log("\nVALIDAÇÃO 5: Alunos não encontrados em Historico_Aluno")
         cursor.execute('''
@@ -170,7 +163,6 @@ def validar_regras():
         else:
             escrever_log("✓ Todos os alunos possuem registros em Historico_Aluno.")
 
-        # 6. Todos os Professores devem estar na tabela Historico_Professor
         escrever_log("\nVALIDAÇÃO 6: Professores não encontrados em Historico_Professor")
         cursor.execute('''
             SELECT "Prof_ID", "Nome"
@@ -186,7 +178,6 @@ def validar_regras():
         else:
             escrever_log("✓ Todos os professores possuem registros em Historico_Professor.")
 
-        # 7. Todos os Cursos e Disciplinas devem estar na tabela Matriz_Curricular
         escrever_log("\nVALIDAÇÃO 7: Cursos não encontrados em Matriz_Curricular")
         cursor.execute('''
             SELECT "Curso_ID", "Instrumento"
