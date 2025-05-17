@@ -2,7 +2,7 @@ import psycopg2
 from psycopg2 import Error
 from datetime import datetime
 
-LOG_FILE = 'validacao_escola_musica.log'
+LOG_FILE = 'validacao_escola_musica_v2.log'
 
 def conectar_banco():
     try:
@@ -78,26 +78,43 @@ def validar_regras():
         escrever_log(f"- Registros no Histórico de Professores: {total_registros['historico_professor']}")
         escrever_log(f"- Registros na Matriz Curricular: {total_registros['matriz']}\n")
         
-        escrever_log("\nVERIFICAÇÃO 1 -> Alunos sem curso atribuído")
+        escrever_log("\nVERIFICAÇÃO 1 -> Alunos sem disciplinas no histórico")
         cursor.execute('''
-            SELECT "RA", "Nome" 
-            FROM "Aluno" 
-            WHERE "Curso" IS NULL OR "Curso" = '';
+            SELECT DISTINCT a."RA", a."Nome" 
+            FROM "Aluno" a
+            LEFT JOIN "Historico_Aluno" ha ON a."RA" = ha."RA" 
+            WHERE ha."RA" IS NULL;
         ''')
-        alunos_sem_curso = cursor.fetchall()
-        if alunos_sem_curso:
-            violacoes += len(alunos_sem_curso)
-            escrever_log(f"AVISO: {len(alunos_sem_curso)} aluno(s) sem curso:")
-            for aluno in alunos_sem_curso:
+        alunos_sem_disciplina = cursor.fetchall()
+        if alunos_sem_disciplina:
+            violacoes += len(alunos_sem_disciplina)
+            escrever_log(f"AVISO: {len(alunos_sem_disciplina)} aluno(s) sem nenhuma disciplina no histórico:")
+            for aluno in alunos_sem_disciplina:
                 escrever_log(f"  - RA: {aluno[0]} | Nome: {aluno[1]}")
         else:
-            escrever_log("OK - Todos os alunos possuem curso atribuído")
+            escrever_log("OK - Todos os alunos possuem disciplinas no histórico")
 
-        escrever_log("\nVERIFICAÇÃO 2 -> Departamentos sem chefe")
+        escrever_log("\nVERIFICAÇÃO 2 -> Professores sem histórico de disciplinas")
         cursor.execute('''
-            SELECT "Dept_ID", "Nome" 
-            FROM "Departamento" 
-            WHERE "Chefe" IS NULL OR "Chefe" = '';
+            SELECT DISTINCT p."Prof_ID", p."Nome"
+            FROM "Professor" p
+            LEFT JOIN "Historico_Professor" hp ON p."Prof_ID" = hp."Prof_ID"
+            WHERE hp."Prof_ID" IS NULL;
+        ''')
+        profs_sem_hist = cursor.fetchall()
+        if profs_sem_hist:
+            violacoes += len(profs_sem_hist)
+            escrever_log(f"AVISO: {len(profs_sem_hist)} professor(es) sem histórico de disciplinas:")
+            for prof in profs_sem_hist:
+                escrever_log(f"  - ID: {prof[0]} | Nome: {prof[1]}")
+        else:
+            escrever_log("OK - Todos os professores possuem histórico de disciplinas")
+
+        escrever_log("\nVERIFICAÇÃO 3 -> Departamentos sem chefe")
+        cursor.execute('''
+            SELECT d."Dept_ID", d."Nome"
+            FROM "Departamento" d
+            WHERE d."Chefe" IS NULL;
         ''')
         deps_sem_chefe = cursor.fetchall()
         if deps_sem_chefe:
@@ -108,11 +125,11 @@ def validar_regras():
         else:
             escrever_log("OK - Todos os departamentos possuem chefe")
 
-        escrever_log("\nVERIFICAÇÃO 3 -> Professores sem departamento")
+        escrever_log("\nVERIFICAÇÃO 4 -> Professores sem departamento")
         cursor.execute('''
-            SELECT "Prof_ID", "Nome" 
-            FROM "Professor" 
-            WHERE "Departamento" IS NULL OR "Departamento" = '';
+            SELECT p."Prof_ID", p."Nome"
+            FROM "Professor" p
+            WHERE p."Departamento" IS NULL;
         ''')
         profs_sem_dep = cursor.fetchall()
         if profs_sem_dep:
@@ -123,50 +140,37 @@ def validar_regras():
         else:
             escrever_log("OK - Todos os professores estão vinculados a departamentos")
 
-        escrever_log("\nVERIFICAÇÃO 4 -> Cursos sem coordenador")
+        escrever_log("\nVERIFICAÇÃO 5 -> Cursos não incluídos na matriz curricular")
         cursor.execute('''
-            SELECT "Curso_ID", "Instrumento" 
-            FROM "Curso" 
-            WHERE "Coordenador" IS NULL OR "Coordenador" = '';
+            SELECT DISTINCT c."Curso_ID", c."Instrumento"
+            FROM "Curso" c
+            LEFT JOIN "Matriz_Curricular" m ON c."Curso_ID" = m."Curso"
+            WHERE m."Curso" IS NULL;
         ''')
-        cursos_sem_coord = cursor.fetchall()
-        if cursos_sem_coord:
-            violacoes += len(cursos_sem_coord)
-            escrever_log(f"AVISO: {len(cursos_sem_coord)} curso(s) sem coordenador:")
-            for curso in cursos_sem_coord:
+        cursos_sem_matriz = cursor.fetchall()
+        if cursos_sem_matriz:
+            violacoes += len(cursos_sem_matriz)
+            escrever_log(f"AVISO: {len(cursos_sem_matriz)} curso(s) não incluídos na matriz curricular:")
+            for curso in cursos_sem_matriz:
                 escrever_log(f"  - ID: {curso[0]} | Instrumento: {curso[1]}")
         else:
-            escrever_log("OK - Todos os cursos possuem coordenador")
+            escrever_log("OK - Todos os cursos estão na matriz curricular")
 
-        escrever_log("\nVERIFICAÇÃO 5 -> Disciplinas fora da matriz curricular")
+        escrever_log("\nVERIFICAÇÃO 6 -> Disciplinas fora da matriz curricular")
         cursor.execute('''
-            SELECT "Disc_ID", "Instrumento", "Nivel"
-            FROM "Disciplina"
-            WHERE "Disc_ID" NOT IN (SELECT DISTINCT "Disciplina" FROM "Matriz_Curricular");
+            SELECT DISTINCT d."Disc_ID", d."Instrumento", d."Nivel"
+            FROM "Disciplina" d
+            LEFT JOIN "Matriz_Curricular" m ON d."Disc_ID" = m."Disciplina"
+            WHERE m."Disciplina" IS NULL;
         ''')
         disc_sem_matriz = cursor.fetchall()
         if disc_sem_matriz:
             violacoes += len(disc_sem_matriz)
-            escrever_log(f"AVISO: {len(disc_sem_matriz)} disciplina(s) não constam na matriz curricular:")
+            escrever_log(f"AVISO: {len(disc_sem_matriz)} disciplina(s) não incluídas na matriz curricular:")
             for disc in disc_sem_matriz:
                 escrever_log(f"  - ID: {disc[0]} | Instrumento: {disc[1]} | Nível: {disc[2]}")
         else:
             escrever_log("OK - Todas as disciplinas estão na matriz curricular")
-
-        escrever_log("\nVERIFICAÇÃO 6 -> Alunos sem histórico")
-        cursor.execute('''
-            SELECT "RA", "Nome"
-            FROM "Aluno"
-            WHERE "RA" NOT IN (SELECT DISTINCT "RA" FROM "Historico_Aluno");
-        ''')
-        alunos_sem_hist = cursor.fetchall()
-        if alunos_sem_hist:
-            violacoes += len(alunos_sem_hist)
-            escrever_log(f"AVISO: {len(alunos_sem_hist)} aluno(s) sem histórico:")
-            for aluno in alunos_sem_hist:
-                escrever_log(f"  - RA: {aluno[0]} | Nome: {aluno[1]}")
-        else:
-            escrever_log("OK - Todos os alunos possuem histórico")
 
         escrever_log("\n" + "-"*20)
         escrever_log("RESULTADO DA VALIDAÇÃO:")
